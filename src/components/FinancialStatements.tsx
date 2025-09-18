@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
 import { TrendingUp, Eye, Download, Calculator } from 'lucide-react';
+import { useAppContext } from '../context/useAppContext';
+import { exportFinancialStatementsExcel } from '../services/export';
+
+interface ExportStatus {
+  inProgress: boolean;
+  progress: number;
+  error: string | null;
+}
 
 type StatementType = 'pl' | 'balance' | 'cashflow';
 
 export const FinancialStatements: React.FC = () => {
   const [activeStatement, setActiveStatement] = useState<StatementType>('pl');
+  const [exportStatus, setExportStatus] = useState<ExportStatus>({
+    inProgress: false,
+    progress: 0,
+    error: null,
+  });
+  const { appState } = useAppContext();
 
   const plData = [
     { label: 'Chiffre d\'affaires', current: 18450, previous: 17100, accounts: '701, 702, 706', variance: 7.9 },
@@ -71,6 +85,34 @@ export const FinancialStatements: React.FC = () => {
     }
   };
 
+  const handleExportExcel = async () => {
+    setExportStatus({ inProgress: true, progress: 0, error: null });
+
+    try {
+      await exportFinancialStatementsExcel({
+        metadata: {
+          companyName: appState.companyName,
+          analysisDate: appState.analysisDate,
+          period: appState.currentPeriod,
+          currency: appState.currency,
+        },
+        statements: {
+          'Compte de Résultat': plData,
+          Bilan: balanceData,
+          'Tableau de flux': cashflowData,
+        },
+        onProgress: progress => setExportStatus(prev => ({ ...prev, progress })),
+      });
+      setExportStatus(prev => ({ ...prev, inProgress: false }));
+    } catch (error) {
+      setExportStatus({
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Export Excel impossible.',
+      });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -79,10 +121,26 @@ export const FinancialStatements: React.FC = () => {
           <p className="text-gray-600">États normalisés avec drill-down jusqu'aux écritures FEC</p>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Export Excel TS</span>
-          </button>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={handleExportExcel}
+              disabled={exportStatus.inProgress}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                exportStatus.inProgress
+                  ? 'bg-blue-400 text-white cursor-wait'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              <Download className="h-4 w-4" />
+              <span>{exportStatus.inProgress ? 'Export en cours...' : 'Export Excel TS'}</span>
+            </button>
+            {exportStatus.inProgress && (
+              <span className="text-xs text-blue-600">Progression {exportStatus.progress}%</span>
+            )}
+            {exportStatus.error && (
+              <span className="text-xs text-red-600">{exportStatus.error}</span>
+            )}
+          </div>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
             <Calculator className="h-4 w-4" />
             <span>Recalculer</span>

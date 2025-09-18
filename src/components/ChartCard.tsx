@@ -1,28 +1,41 @@
 import React from 'react';
 
+interface LineChartPoint {
+  month: string;
+  ebitda: number;
+  ca: number;
+}
+
+interface BarChartPoint {
+  category: string;
+  value: number;
+  target: number;
+}
+
 interface ChartCardProps {
   title: string;
   type: 'line' | 'bar';
-  data: any[];
+  data: LineChartPoint[] | BarChartPoint[];
 }
 
 export const ChartCard: React.FC<ChartCardProps> = ({ title, type, data }) => {
-  const renderLineChart = () => {
-    const maxValue = Math.max(...data.flatMap(d => [d.ebitda, d.ca]));
-    
+  const renderLineChart = (series: LineChartPoint[]) => {
+    const maxValue = Math.max(...series.flatMap(point => [point.ebitda, point.ca]));
+    const safeMax = maxValue === 0 ? 1 : maxValue;
+
     return (
       <div className="h-64 flex items-end space-x-2">
-        {data.map((item, index) => (
+        {series.map((item, index) => (
           <div key={index} className="flex-1 flex flex-col items-center space-y-1">
             <div className="flex flex-col items-center space-y-1 w-full">
-              <div 
+              <div
                 className="w-full bg-blue-500 rounded-t"
-                style={{ height: `${(item.ebitda / maxValue) * 180}px` }}
+                style={{ height: `${(item.ebitda / safeMax) * 180}px` }}
                 title={`EBITDA: ${item.ebitda}K€`}
               />
-              <div 
+              <div
                 className="w-full bg-green-500 rounded-t opacity-70"
-                style={{ height: `${(item.ca / maxValue) * 180}px` }}
+                style={{ height: `${(item.ca / safeMax) * 180}px` }}
                 title={`CA: ${item.ca}K€`}
               />
             </div>
@@ -33,25 +46,26 @@ export const ChartCard: React.FC<ChartCardProps> = ({ title, type, data }) => {
     );
   };
 
-  const renderBarChart = () => {
-    const maxValue = Math.max(...data.map(d => Math.abs(d.value)));
-    
+  const renderBarChart = (series: BarChartPoint[]) => {
+    const maxValue = Math.max(...series.map(point => Math.abs(point.value)));
+    const safeMax = maxValue === 0 ? 1 : maxValue;
+
     return (
       <div className="h-64 flex items-end space-x-4">
-        {data.map((item, index) => (
+        {series.map((item, index) => (
           <div key={index} className="flex-1 flex flex-col items-center space-y-2">
             <div className="w-full relative">
-              <div 
+              <div
                 className={`w-full rounded ${item.value >= 0 ? 'bg-blue-500' : 'bg-red-500'}`}
-                style={{ 
-                  height: `${(Math.abs(item.value) / maxValue) * 180}px`,
+                style={{
+                  height: `${(Math.abs(item.value) / safeMax) * 180}px`,
                   marginTop: item.value < 0 ? 'auto' : '0'
                 }}
                 title={`${item.category}: ${item.value}K€`}
               />
-              <div 
+              <div
                 className="w-full border-2 border-dashed border-gray-400 absolute top-0"
-                style={{ height: `${(Math.abs(item.target) / maxValue) * 180}px` }}
+                style={{ height: `${(Math.abs(item.target) / safeMax) * 180}px` }}
                 title={`Target: ${item.target}K€`}
               />
             </div>
@@ -65,7 +79,9 @@ export const ChartCard: React.FC<ChartCardProps> = ({ title, type, data }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      {type === 'line' ? renderLineChart() : renderBarChart()}
+      {type === 'line'
+        ? renderLineChart(data as LineChartPoint[])
+        : renderBarChart(data as BarChartPoint[])}
       
       {type === 'line' && (
         <div className="flex justify-center mt-4 space-x-6">

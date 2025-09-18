@@ -1,13 +1,44 @@
 import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { useAppContext } from '../context/useAppContext';
+import { downloadMappingTemplate } from '../services/export';
+
+interface ExportStatus {
+  inProgress: boolean;
+  progress: number;
+  error: string | null;
+}
+
+type FileStatus = 'uploaded' | 'processed';
+
+interface FileControl {
+  name: string;
+  status: 'passed' | 'warning';
+  message: string;
+}
+
+interface ImportedFile {
+  name: string;
+  size: number;
+  type: string;
+  status: FileStatus;
+  controls: FileControl[];
+  warnings: string[];
+}
 
 export const FileImport: React.FC = () => {
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<ImportedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [templateStatus, setTemplateStatus] = useState<ExportStatus>({
+    inProgress: false,
+    progress: 0,
+    error: null,
+  });
+  const { appState } = useAppContext();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = Array.from(event.target.files || []);
-    const newFiles = uploadedFiles.map(file => ({
+    const newFiles: ImportedFile[] = uploadedFiles.map(file => ({
       name: file.name,
       size: file.size,
       type: file.type,
@@ -15,15 +46,15 @@ export const FileImport: React.FC = () => {
       controls: [],
       warnings: []
     }));
-    setFiles([...files, ...newFiles]);
+    setFiles(prevFiles => [...prevFiles, ...newFiles]);
   };
 
   const processFiles = () => {
     setIsProcessing(true);
-    
+
     // Simulate processing
     setTimeout(() => {
-      const processedFiles = files.map(file => ({
+      const processedFiles: ImportedFile[] = files.map(file => ({
         ...file,
         status: 'processed',
         controls: [
@@ -46,9 +77,27 @@ export const FileImport: React.FC = () => {
     }, 2000);
   };
 
-  const downloadTemplate = () => {
-    // Simulate template download
-    alert('Téléchargement du template de mapping PCG...');
+  const downloadTemplate = async () => {
+    setTemplateStatus({ inProgress: true, progress: 0, error: null });
+
+    try {
+      await downloadMappingTemplate({
+        metadata: {
+          companyName: appState.companyName,
+          analysisDate: appState.analysisDate,
+          period: appState.currentPeriod,
+          currency: appState.currency,
+        },
+        onProgress: progress => setTemplateStatus(prev => ({ ...prev, progress })),
+      });
+      setTemplateStatus(prev => ({ ...prev, inProgress: false }));
+    } catch (error) {
+      setTemplateStatus({
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Impossible de télécharger le template.',
+      });
+    }
   };
 
   return (
@@ -58,13 +107,26 @@ export const FileImport: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Import & Contrôles FEC</h1>
           <p className="text-gray-600">Importez vos fichiers comptables et configurez les paramètres</p>
         </div>
-        <button 
-          onClick={downloadTemplate}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
-        >
-          <Download className="h-4 w-4" />
-          <span>Template Mapping</span>
-        </button>
+        <div className="flex flex-col items-end space-y-1">
+          <button
+            onClick={downloadTemplate}
+            disabled={templateStatus.inProgress}
+            className={`px-4 py-2 border rounded-lg transition-colors flex items-center space-x-2 ${
+              templateStatus.inProgress
+                ? 'border-blue-300 bg-blue-50 text-blue-600 cursor-wait'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Download className="h-4 w-4" />
+            <span>{templateStatus.inProgress ? 'Téléchargement...' : 'Template Mapping'}</span>
+          </button>
+          {templateStatus.inProgress && (
+            <span className="text-xs text-blue-600">Progression {templateStatus.progress}%</span>
+          )}
+          {templateStatus.error && (
+            <span className="text-xs text-red-600">{templateStatus.error}</span>
+          )}
+        </div>
       </div>
 
       {/* Upload Zone */}
@@ -146,7 +208,7 @@ export const FileImport: React.FC = () => {
                   <div className="mt-4">
                     <h5 className="font-medium text-gray-900 mb-2">Contrôles automatiques</h5>
                     <div className="space-y-2">
-                      {file.controls.map((control: any, controlIndex: number) => (
+                      {file.controls.map((control: FileControl, controlIndex: number) => (
                         <div key={controlIndex} className="flex items-center space-x-2">
                           {control.status === 'passed' ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />

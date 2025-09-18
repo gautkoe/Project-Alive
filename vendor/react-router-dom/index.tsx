@@ -27,21 +27,10 @@ type NavigateOptions = {
 type RouterContextValue = {
   location: RouterLocation;
   navigate: (to: string, options?: NavigateOptions) => void;
+  createHref: (to: string) => string;
 };
 
 const RouterContext = createContext<RouterContextValue | null>(null);
-
-const getCurrentLocation = (): RouterLocation => {
-  if (typeof window === 'undefined') {
-    return { pathname: '/', search: '', hash: '' };
-  }
-
-  return {
-    pathname: window.location.pathname || '/',
-    search: window.location.search || '',
-    hash: window.location.hash || '',
-  };
-};
 
 const normalizePath = (path: string): string => {
   if (!path) {
@@ -52,6 +41,106 @@ const normalizePath = (path: string): string => {
   const sanitized = path.replace(/\/+$/, '');
   const value = sanitized === '' ? '/' : sanitized;
   return startsWithSlash ? value : `/${value}`;
+};
+
+const normalizeBasename = (basename?: string): string => {
+  if (!basename) {
+    return '/';
+  }
+
+  try {
+    return normalizePath(new URL(basename).pathname || '/');
+  } catch {
+    try {
+      return normalizePath(new URL(basename, 'http://localhost').pathname || '/');
+    } catch {
+      return normalizePath(basename);
+    }
+  }
+};
+
+const stripBasename = (pathname: string, basename: string): string => {
+  const targetPathname = pathname || '/';
+
+  if (!basename || basename === '/' || basename === '') {
+    return targetPathname;
+  }
+
+  if (!targetPathname.startsWith(basename)) {
+    return targetPathname;
+  }
+
+  const nextChar = targetPathname.charAt(basename.length);
+
+  if (nextChar && nextChar !== '/') {
+    return targetPathname;
+  }
+
+  const stripped = targetPathname.slice(basename.length);
+
+  if (!stripped) {
+    return '/';
+  }
+
+  return stripped.startsWith('/') ? stripped : `/${stripped}`;
+};
+
+const applyBasename = (pathname: string, basename: string): string => {
+  const normalizedPathname = normalizePath(pathname);
+
+  if (!basename || basename === '/' || basename === '') {
+    return normalizedPathname;
+  }
+
+  if (normalizedPathname === '/') {
+    return `${basename}/`;
+  }
+
+  return `${basename}${normalizedPathname}`;
+};
+
+const resolveToUrl = (to: string): URL => {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return new URL(to, window.location.origin);
+  }
+
+  return new URL(to, 'http://localhost');
+};
+
+const createHrefWithBasename = (to: string, basename: string): string => {
+  const targetUrl = resolveToUrl(to);
+  const pathname = applyBasename(targetUrl.pathname, basename);
+  return `${pathname}${targetUrl.search}${targetUrl.hash}`;
+};
+
+const getDefaultBasename = (): string | undefined => {
+  const envBasename = (
+    (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env?.BASE_URL
+  );
+
+  if (envBasename) {
+    return envBasename;
+  }
+
+  if (typeof document !== 'undefined') {
+    return document.baseURI;
+  }
+
+  return undefined;
+};
+
+const getCurrentLocation = (basename: string): RouterLocation => {
+  if (typeof window === 'undefined') {
+    return { pathname: '/', search: '', hash: '' };
+  }
+
+  const relativePathname = stripBasename(window.location.pathname || '/', basename);
+
+  return {
+    pathname: relativePathname === '' ? '/' : relativePathname,
+    search: window.location.search || '',
+    hash: window.location.hash || '',
+  };
 };
 
 const matchRoutePath = (path: string, pathname: string): boolean => {
@@ -105,8 +194,32 @@ const useRouterContext = (): RouterContextValue => {
   return context;
 };
 
-export const BrowserRouter: FC<{ children: ReactNode }> = ({ children }) => {
-  const [location, setLocation] = useState<RouterLocation>(() => getCurrentLocation());
+type BrowserRouterProps = {
+  children: ReactNode;
+  basename?: string;
+};
+
+export const BrowserRouter: FC<BrowserRouterProps> = ({ children, basename }) => {
+  const resolvedBasename = useMemo(
+    () => normalizeBasename(basename ?? getDefaultBasename()),
+    [basename]
+  );
+
+  const getLocation = useCallback(
+    () => getCurrentLocation(resolvedBasename),
+    [resolvedBasename]
+  );
+
+  const createHref = useCallback(
+    (to: string) => createHrefWithBasename(to, resolvedBasename),
+    [resolvedBasename]
+  );
+
+  const [location, setLocation] = useState<RouterLocation>(() => getLocation());
+
+  useEffect(() => {
+    setLocation(getLocation());
+  }, [getLocation]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -114,7 +227,7 @@ export const BrowserRouter: FC<{ children: ReactNode }> = ({ children }) => {
     }
 
     const handlePopState = () => {
-      setLocation(getCurrentLocation());
+      setLocation(getLocation());
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -122,28 +235,30 @@ export const BrowserRouter: FC<{ children: ReactNode }> = ({ children }) => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [getLocation]);
 
-  const navigate = useCallback((to: string, options?: NavigateOptions) => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+  const navigate = useCallback(
+    (to: string, options?: NavigateOptions) => {
+      if (typeof window === 'undefined') {
+        return;
+      }
 
-    const targetUrl = new URL(to, window.location.origin);
-    const href = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+      const href = createHref(to);
 
-    if (options?.replace) {
-      window.history.replaceState(null, '', href);
-    } else {
-      window.history.pushState(null, '', href);
-    }
+      if (options?.replace) {
+        window.history.replaceState(null, '', href);
+      } else {
+        window.history.pushState(null, '', href);
+      }
 
-    setLocation(getCurrentLocation());
-  }, []);
+      setLocation(getLocation());
+    },
+    [createHref, getLocation]
+  );
 
   const contextValue = useMemo(
-    () => ({ location, navigate }),
-    [location, navigate]
+    () => ({ location, navigate, createHref }),
+    [location, navigate, createHref]
   );
 
   return <RouterContext.Provider value={contextValue}>{children}</RouterContext.Provider>;
@@ -198,7 +313,7 @@ export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
     { to, end, className, style, onClick, children, target, ...rest },
     ref
   ) => {
-    const { location, navigate } = useRouterContext();
+    const { location, navigate, createHref } = useRouterContext();
     const isActive = matchNavPath(to, location.pathname, end);
 
     const resolvedClassName =
@@ -226,7 +341,7 @@ export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
       <a
         {...rest}
         ref={ref}
-        href={to}
+        href={createHref(to)}
         target={target}
         onClick={handleClick}
         aria-current={isActive ? 'page' : undefined}
@@ -248,7 +363,7 @@ type LinkProps = {
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
   ({ to, onClick, target, children, ...rest }, ref) => {
-    const { navigate } = useRouterContext();
+    const { navigate, createHref } = useRouterContext();
 
     const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
       if (onClick) {
@@ -267,7 +382,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         ref={ref}
-        href={to}
+        href={createHref(to)}
         target={target}
         onClick={handleClick}
       >

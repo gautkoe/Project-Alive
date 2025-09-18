@@ -18,7 +18,7 @@ interface ThemeContextValue {
 
 const STORAGE_KEY = 'pegase:theme-preference';
 
-const getInitialTheme = (): Theme => {
+export const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') {
     return 'light';
   }
@@ -28,8 +28,16 @@ const getInitialTheme = (): Theme => {
     return storedTheme;
   }
 
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  return prefersDark ? 'dark' : 'light';
+  if (typeof window.matchMedia !== 'function') {
+    return 'light';
+  }
+
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  if (!mediaQuery) {
+    return 'light';
+  }
+
+  return mediaQuery.matches ? 'dark' : 'light';
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -46,24 +54,45 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [theme]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return;
     }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (event: MediaQueryListEvent) => {
+    if (!mediaQuery) {
+      return;
+    }
+
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      const matches = 'matches' in event ? event.matches : mediaQuery.matches;
+
       setThemeState(() => {
         const storedTheme = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
         if (storedTheme === 'light' || storedTheme === 'dark') {
           return storedTheme;
         }
 
-        return event.matches ? 'dark' : 'light';
+        return matches ? 'dark' : 'light';
       });
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => {
+        if (typeof mediaQuery.removeEventListener === 'function') {
+          mediaQuery.removeEventListener('change', handleChange);
+        }
+      };
+    }
+
+    if (typeof mediaQuery.addListener === 'function') {
+      mediaQuery.addListener(handleChange);
+      return () => {
+        if (typeof mediaQuery.removeListener === 'function') {
+          mediaQuery.removeListener(handleChange);
+        }
+      };
+    }
   }, []);
 
   const setTheme = useCallback((nextTheme: Theme) => {

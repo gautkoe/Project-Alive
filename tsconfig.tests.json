@@ -14,6 +14,8 @@
   },
   "include": [
     "vendor/react-router-dom/index.tsx",
-    "vendor/react-router-dom/index.test.tsx"
+    "vendor/react-router-dom/index.test.tsx",
+    "src/context/ThemeContext.tsx",
+    "src/context/ThemeContext.test.ts"
   ]
 }

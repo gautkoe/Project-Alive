@@ -75,15 +75,15 @@ export const FinancialStatements: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">États Financiers Retraités</h1>
-          <p className="text-gray-600">États normalisés avec drill-down jusqu'aux écritures FEC</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">États Financiers Retraités</h1>
+          <p className="text-gray-600 dark:text-slate-300">États normalisés avec drill-down jusqu'aux écritures FEC</p>
         </div>
         <div className="flex space-x-3">
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
             <Download className="h-4 w-4" />
             <span>Export Excel TS</span>
           </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
+          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
             <Calculator className="h-4 w-4" />
             <span>Recalculer</span>
           </button>
@@ -91,8 +91,8 @@ export const FinancialStatements: React.FC = () => {
       </div>
 
       {/* Statement Tabs */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="border-b border-gray-200">
+      <div className="bg-white rounded-lg border border-gray-200 dark:bg-slate-900 dark:border-slate-700">
+        <div className="border-b border-gray-200 dark:border-slate-700">
           <nav className="flex space-x-8 px-6">
             {[
               { id: 'pl', label: 'Compte de Résultat', icon: TrendingUp },
@@ -104,8 +104,8 @@ export const FinancialStatements: React.FC = () => {
                 onClick={() => setActiveStatement(tab.id as StatementType)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
                   activeStatement === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:border-slate-600'
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -118,13 +118,13 @@ export const FinancialStatements: React.FC = () => {
         {/* Statement Content */}
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">{getTitle()}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">{getTitle()}</h2>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">Période:</span> Janvier 2024 - Décembre 2024
+              <div className="text-sm text-gray-600 dark:text-slate-300">
+                <span className="font-medium text-gray-900 dark:text-slate-100">Période:</span> Janvier 2024 - Décembre 2024
               </div>
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">Devise:</span> EUR (000)
+              <div className="text-sm text-gray-600 dark:text-slate-300">
+                <span className="font-medium text-gray-900 dark:text-slate-100">Devise:</span> EUR (000)
               </div>
             </div>
           </div>
@@ -132,29 +132,29 @@ export const FinancialStatements: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Rubrique</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-900">2024 (LTM)</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-900">2023</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-900">Δ %</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Comptes PCG</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Actions</th>
+                <tr className="border-b border-gray-200 dark:border-slate-700">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">Rubrique</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">2024 (LTM)</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">2023</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">Δ %</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">Comptes PCG</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-slate-100">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {getCurrentData().map((row, index) => (
-                  <tr 
-                    key={index} 
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                      row.isCalculated ? 'bg-blue-50 font-semibold' : ''
+                  <tr
+                    key={index}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors dark:border-slate-800 dark:hover:bg-slate-800 ${
+                      row.isCalculated ? 'bg-blue-50 font-semibold dark:bg-blue-500/10' : ''
                     }`}
                   >
-                    <td className="py-3 px-4 text-gray-900">{row.label}</td>
+                    <td className="py-3 px-4 text-gray-900 dark:text-slate-200">{row.label}</td>
                     <td className="py-3 px-4 text-right font-mono">
                       {row.current > 0 ? '' : ''}
                       {Math.abs(row.current).toLocaleString('fr-FR')}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-gray-600">
+                    <td className="py-3 px-4 text-right font-mono text-gray-600 dark:text-slate-300">
                       {row.previous > 0 ? '' : ''}
                       {Math.abs(row.previous).toLocaleString('fr-FR')}
                     </td>
@@ -165,9 +165,9 @@ export const FinancialStatements: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        row.isCalculated 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-gray-100 text-gray-700'
+                        row.isCalculated
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                          : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200'
                       }`}>
                         {row.accounts}
                       </span>
@@ -175,7 +175,7 @@ export const FinancialStatements: React.FC = () => {
                     <td className="py-3 px-4 text-center">
                       <button
                         onClick={() => drillDown(row.accounts)}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                        className="text-blue-600 hover:text-blue-800 transition-colors dark:text-blue-300 dark:hover:text-blue-200"
                         title="Drill-down vers écritures FEC"
                       >
                         <Eye className="h-4 w-4" />
@@ -189,8 +189,8 @@ export const FinancialStatements: React.FC = () => {
 
           {/* Additional Analytics */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Ratios Clés</h4>
+            <div className="bg-gray-50 rounded-lg p-4 dark:bg-slate-900/60 dark:text-slate-200">
+              <h4 className="font-semibold text-gray-900 mb-2 dark:text-slate-100">Ratios Clés</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Marge EBITDA</span>
@@ -207,8 +207,8 @@ export const FinancialStatements: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Évolution vs N-1</h4>
+            <div className="bg-gray-50 rounded-lg p-4 dark:bg-slate-900/60 dark:text-slate-200">
+              <h4 className="font-semibold text-gray-900 mb-2 dark:text-slate-100">Évolution vs N-1</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Croissance CA</span>
@@ -225,8 +225,8 @@ export const FinancialStatements: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Contrôles</h4>
+            <div className="bg-gray-50 rounded-lg p-4 dark:bg-slate-900/60 dark:text-slate-200">
+              <h4 className="font-semibold text-gray-900 mb-2 dark:text-slate-100">Contrôles</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between items-center">
                   <span>Équilibre</span>

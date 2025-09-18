@@ -71,27 +71,6 @@ export const Deliverables: React.FC = () => {
     { id: 'fec_export', name: 'Annexes FEC' }
   ];
 
-  const customizationOptions = {
-    executive: {
-      showRisks: true,
-      includeQoE: true,
-      maskedVersion: false,
-      language: 'fr'
-    },
-    ts_report: {
-      includeAppendices: true,
-      detailedAnalysis: true,
-      maskedVersion: false,
-      confidentialityLevel: 'standard'
-    },
-    excel_master: {
-      protectedFormulas: true,
-      drillDownEnabled: true,
-      includeSourceData: true,
-      readOnlyMode: false
-    }
-  };
-
   const generateDeliverable = (id: string) => {
     alert(`Génération du livrable: ${deliverables.find(d => d.id === id)?.title}\nTraitement en cours...`);
   };
@@ -108,15 +87,15 @@ export const Deliverables: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Livrables & Exports</h1>
-          <p className="text-gray-600">Génération automatique de rapports professionnels</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Livrables & Exports</h1>
+          <p className="text-gray-600 dark:text-slate-300">Génération automatique de rapports professionnels</p>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 dark:bg-blue-500 dark:hover:bg-blue-400">
             <Download className="h-4 w-4" />
             <span>Tout Télécharger</span>
           </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
+          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
             <Send className="h-4 w-4" />
             <span>Partager</span>
           </button>
@@ -124,17 +103,17 @@ export const Deliverables: React.FC = () => {
       </div>
 
       {/* Template Selection */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Types de Livrables</h3>
+      <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-slate-100">Types de Livrables</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {templates.map((template) => (
             <button
               key={template.id}
               onClick={() => setSelectedTemplate(template.id)}
-              className={`p-4 border-2 rounded-lg text-left transition-colors ${
+              className={`p-4 border-2 rounded-lg text-left transition-colors text-gray-700 dark:text-slate-200 ${
                 selectedTemplate === template.id
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-100'
+                  : 'border-gray-200 hover:border-gray-300 dark:border-slate-700 dark:hover:border-slate-500'
               }`}
             >
               <div className="flex items-center space-x-2 mb-2">
@@ -145,7 +124,7 @@ export const Deliverables: React.FC = () => {
                 )}
                 <span className="font-medium">{template.name}</span>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-slate-300">
                 {deliverables.find(d => d.id === template.id)?.description}
               </p>
             </button>
@@ -158,22 +137,22 @@ export const Deliverables: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Template Preview */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {deliverables.find(d => d.id === selectedTemplate)?.title}
                 </h3>
                 <div className="flex space-x-2">
-                  <button 
+                  <button
                     onClick={() => previewDeliverable(selectedTemplate)}
-                    className="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors flex items-center space-x-1"
+                    className="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors flex items-center space-x-1 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Eye className="h-3 w-3" />
                     <span>Aperçu</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => generateDeliverable(selectedTemplate)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1 dark:bg-blue-500 dark:hover:bg-blue-400"
                   >
                     <Download className="h-3 w-3" />
                     <span>Générer</span>
@@ -184,32 +163,32 @@ export const Deliverables: React.FC = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Type:</span>
-                    <p className="font-medium">{deliverables.find(d => d.id === selectedTemplate)?.type}</p>
+                    <span className="text-gray-600 dark:text-slate-300">Type:</span>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{deliverables.find(d => d.id === selectedTemplate)?.type}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Pages:</span>
-                    <p className="font-medium">{deliverables.find(d => d.id === selectedTemplate)?.pages}</p>
+                    <span className="text-gray-600 dark:text-slate-300">Pages:</span>
+                    <p className="font-medium text-gray-900 dark:text-slate-100">{deliverables.find(d => d.id === selectedTemplate)?.pages}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Statut:</span>
-                    <span className="inline-flex px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                    <span className="text-gray-600 dark:text-slate-300">Statut:</span>
+                    <span className="inline-flex px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium dark:bg-green-500/20 dark:text-green-200">
                       Prêt
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Dernière MAJ:</span>
-                    <p className="font-medium text-xs">{deliverables.find(d => d.id === selectedTemplate)?.lastGenerated}</p>
+                    <span className="text-gray-600 dark:text-slate-300">Dernière MAJ:</span>
+                    <p className="font-medium text-xs text-gray-900 dark:text-slate-100">{deliverables.find(d => d.id === selectedTemplate)?.lastGenerated}</p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Sections incluses:</h4>
+                  <h4 className="font-medium text-gray-900 mb-2 dark:text-slate-100">Sections incluses:</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {deliverables.find(d => d.id === selectedTemplate)?.sections.map((section, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                        <span className="text-sm text-gray-700">{section}</span>
+                        <span className="text-sm text-gray-700 dark:text-slate-300">{section}</span>
                       </div>
                     ))}
                   </div>
@@ -218,13 +197,13 @@ export const Deliverables: React.FC = () => {
             </div>
 
             {/* Content Preview */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Aperçu du Contenu</h4>
-              
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+              <h4 className="font-medium text-gray-900 mb-4 dark:text-slate-100">Aperçu du Contenu</h4>
+
               {selectedTemplate === 'executive' && (
-                <div className="space-y-4 text-sm">
-                  <div className="p-4 bg-gray-50 rounded">
-                    <h5 className="font-medium mb-2">ACME SAS - Executive Summary</h5>
+                <div className="space-y-4 text-sm text-gray-700 dark:text-slate-200">
+                  <div className="p-4 bg-gray-50 rounded dark:bg-slate-800/60">
+                    <h5 className="font-medium mb-2 text-gray-900 dark:text-slate-100">ACME SAS - Executive Summary</h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>• CA LTM: 18.45 M€ (+7.9%)</div>
                       <div>• EBITDA Normalisé: 2.34 M€ (+23.2%)</div>
@@ -236,20 +215,20 @@ export const Deliverables: React.FC = () => {
               )}
 
               {selectedTemplate === 'ts_report' && (
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between border-b pb-2">
+                <div className="space-y-3 text-sm text-gray-700 dark:text-slate-200">
+                  <div className="flex justify-between border-b border-gray-200 pb-2 dark:border-slate-700">
                     <span>1. Executive Summary</span><span>Page 1-2</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2">
+                  <div className="flex justify-between border-b border-gray-200 pb-2 dark:border-slate-700">
                     <span>2. États Financiers Retraités</span><span>Page 3-8</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2">
+                  <div className="flex justify-between border-b border-gray-200 pb-2 dark:border-slate-700">
                     <span>3. Quality of Earnings</span><span>Page 9-12</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2">
+                  <div className="flex justify-between border-b border-gray-200 pb-2 dark:border-slate-700">
                     <span>4. Analyse BFR & Net Debt</span><span>Page 13-15</span>
                   </div>
-                  <div className="flex justify-between border-b pb-2">
+                  <div className="flex justify-between border-b border-gray-200 pb-2 dark:border-slate-700">
                     <span>5. Risk Assessment</span><span>Page 16-17</span>
                   </div>
                   <div className="flex justify-between">
@@ -259,7 +238,7 @@ export const Deliverables: React.FC = () => {
               )}
 
               {selectedTemplate === 'excel_master' && (
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm text-gray-700 dark:text-slate-200">
                   <div className="grid grid-cols-2 gap-4">
                     <div>📊 Dashboard</div>
                     <div>📈 P&L Retraité</div>
@@ -270,7 +249,7 @@ export const Deliverables: React.FC = () => {
                     <div>📊 Ratios & KPIs</div>
                     <div>📋 Sources FEC</div>
                   </div>
-                  <p className="text-gray-600 mt-3">
+                  <p className="text-gray-600 mt-3 dark:text-slate-300">
                     Toutes les formules sont protégées. Drill-down disponible sur chaque chiffre.
                   </p>
                 </div>
@@ -280,23 +259,23 @@ export const Deliverables: React.FC = () => {
 
           {/* Customization Panel */}
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Options de Personnalisation</h4>
-              
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+              <h4 className="font-medium text-gray-900 mb-4 dark:text-slate-100">Options de Personnalisation</h4>
+
               <div className="space-y-4">
                 {selectedTemplate === 'executive' && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Inclure les risques</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Inclure les risques</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Détail QoE</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Détail QoE</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Version anonymisée</span>
-                      <input type="checkbox" className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Version anonymisée</span>
+                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                   </>
                 )}
@@ -304,16 +283,16 @@ export const Deliverables: React.FC = () => {
                 {selectedTemplate === 'ts_report' && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Annexes détaillées</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Annexes détaillées</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Analyse sectorielle</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Analyse sectorielle</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Niveau de confidentialité</label>
-                      <select className="w-full text-sm border rounded px-2 py-1">
+                      <label className="block text-sm text-gray-700 mb-1 dark:text-slate-300">Niveau de confidentialité</label>
+                      <select className="w-full text-sm border rounded px-2 py-1 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                         <option>Standard</option>
                         <option>Confidentiel</option>
                         <option>Très confidentiel</option>
@@ -325,23 +304,23 @@ export const Deliverables: React.FC = () => {
                 {selectedTemplate === 'excel_master' && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Formules protégées</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Formules protégées</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Drill-down activé</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Drill-down activé</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">Données sources</span>
-                      <input type="checkbox" defaultChecked className="rounded" />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">Données sources</span>
+                      <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" />
                     </div>
                   </>
                 )}
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Format de date</label>
-                  <select className="w-full text-sm border rounded px-2 py-1">
+                  <label className="block text-sm text-gray-700 mb-1 dark:text-slate-300">Format de date</label>
+                  <select className="w-full text-sm border rounded px-2 py-1 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                     <option>DD/MM/YYYY</option>
                     <option>MM/DD/YYYY</option>
                     <option>YYYY-MM-DD</option>
@@ -351,12 +330,12 @@ export const Deliverables: React.FC = () => {
             </div>
 
             {/* Generation History */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+              <h4 className="font-medium text-gray-900 mb-4 flex items-center dark:text-slate-100">
                 <Calendar className="h-4 w-4 mr-2" />
                 Historique
               </h4>
-              
+
               <div className="space-y-3">
                 {[
                   { date: '15/01 16:50', version: 'v1.3', action: 'Généré' },
@@ -364,33 +343,33 @@ export const Deliverables: React.FC = () => {
                   { date: '14/01 18:45', version: 'v1.1', action: 'Généré' },
                   { date: '14/01 16:20', version: 'v1.0', action: 'Créé' }
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
+                  <div key={index} className="flex items-center justify-between text-sm text-gray-700 dark:text-slate-200">
                     <div>
-                      <span className="font-medium">{item.version}</span>
-                      <span className="text-gray-600 ml-2">{item.action}</span>
+                      <span className="font-medium text-gray-900 dark:text-slate-100">{item.version}</span>
+                      <span className="text-gray-600 ml-2 dark:text-slate-300">{item.action}</span>
                     </div>
-                    <span className="text-gray-500">{item.date}</span>
+                    <span className="text-gray-500 dark:text-slate-400">{item.date}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Actions Rapides</h4>
-              
+            <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+              <h4 className="font-medium text-gray-900 mb-4 dark:text-slate-100">Actions Rapides</h4>
+
               <div className="space-y-2">
-                <button 
+                <button
                   onClick={() => shareDeliverable(selectedTemplate)}
-                  className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 dark:bg-blue-500 dark:hover:bg-blue-400"
                 >
                   <Send className="h-3 w-3" />
                   <span>Partager par email</span>
                 </button>
-                <button className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors">
+                <button className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                   Programmer génération
                 </button>
-                <button className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors">
+                <button className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                   Créer template custom
                 </button>
               </div>

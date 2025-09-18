@@ -1,11 +1,12 @@
 import React from 'react';
 import { ViewType } from '../App';
-import { 
-  LayoutDashboard, 
-  Upload, 
-  FileText, 
-  AlertTriangle, 
-  TrendingUp, 
+import {
+  Home as HomeIcon,
+  LayoutDashboard,
+  Upload,
+  FileText,
+  AlertTriangle,
+  TrendingUp,
   Download,
   Zap
 } from 'lucide-react';
@@ -17,10 +18,11 @@ interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) => {
   const navItems = [
+    { id: 'home' as ViewType, label: 'Accueil', icon: HomeIcon },
     { id: 'dashboard' as ViewType, label: 'Tableau de Bord', icon: LayoutDashboard },
-    { id: 'import' as ViewType, label: 'Import FEC', icon: Upload },
+    { id: 'import' as ViewType, label: 'Import & Contrôles', icon: Upload },
     { id: 'financials' as ViewType, label: 'États Financiers', icon: FileText },
-    { id: 'risk' as ViewType, label: 'Analyse Risques', icon: AlertTriangle },
+    { id: 'risk' as ViewType, label: 'Analyse des Risques', icon: AlertTriangle },
     { id: 'qoe' as ViewType, label: 'Quality of Earnings', icon: TrendingUp },
     { id: 'deliverables' as ViewType, label: 'Livrables', icon: Download },
   ];

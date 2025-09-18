@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Download } from 'lucide-react';
 
+type ControlStatus = 'passed' | 'warning';
+
+interface FileControl {
+  name: string;
+  status: ControlStatus;
+  message: string;
+}
+
+type FileProcessingStatus = 'uploaded' | 'processed';
+
+interface ImportedFile {
+  name: string;
+  size: number;
+  type: string;
+  status: FileProcessingStatus;
+  controls: FileControl[];
+  warnings: string[];
+}
+
 export const FileImport: React.FC = () => {
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<ImportedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -12,7 +31,7 @@ export const FileImport: React.FC = () => {
       size: file.size,
       type: file.type,
       status: 'uploaded',
-      controls: [],
+      controls: [] as FileControl[],
       warnings: []
     }));
     setFiles([...files, ...newFiles]);
@@ -20,10 +39,10 @@ export const FileImport: React.FC = () => {
 
   const processFiles = () => {
     setIsProcessing(true);
-    
+
     // Simulate processing
     setTimeout(() => {
-      const processedFiles = files.map(file => ({
+      const processedFiles = files.map<ImportedFile>(file => ({
         ...file,
         status: 'processed',
         controls: [
@@ -146,7 +165,7 @@ export const FileImport: React.FC = () => {
                   <div className="mt-4">
                     <h5 className="font-medium text-gray-900 mb-2">Contrôles automatiques</h5>
                     <div className="space-y-2">
-                      {file.controls.map((control: any, controlIndex: number) => (
+                {file.controls.map((control, controlIndex) => (
                         <div key={controlIndex} className="flex items-center space-x-2">
                           {control.status === 'passed' ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />

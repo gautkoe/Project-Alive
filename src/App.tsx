@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigation } from './components/Navigation';
+import { Home } from './components/Home';
 import { Dashboard } from './components/Dashboard';
 import { FileImport } from './components/FileImport';
 import { FinancialStatements } from './components/FinancialStatements';
@@ -8,13 +9,22 @@ import { QualityOfEarnings } from './components/QualityOfEarnings';
 import { Deliverables } from './components/Deliverables';
 import { AppProvider } from './context/AppContext';
 
-export type ViewType = 'dashboard' | 'import' | 'financials' | 'risk' | 'qoe' | 'deliverables';
+export type ViewType =
+  | 'home'
+  | 'dashboard'
+  | 'import'
+  | 'financials'
+  | 'risk'
+  | 'qoe'
+  | 'deliverables';
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [currentView, setCurrentView] = useState<ViewType>('home');
 
   const renderView = () => {
     switch (currentView) {
+      case 'home':
+        return <Home onNavigate={setCurrentView} />;
       case 'dashboard':
         return <Dashboard />;
       case 'import':
@@ -28,7 +38,7 @@ function App() {
       case 'deliverables':
         return <Deliverables />;
       default:
-        return <Dashboard />;
+        return <Home onNavigate={setCurrentView} />;
     }
   };
 

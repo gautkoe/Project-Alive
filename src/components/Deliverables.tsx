@@ -71,27 +71,6 @@ export const Deliverables: React.FC = () => {
     { id: 'fec_export', name: 'Annexes FEC' }
   ];
 
-  const customizationOptions = {
-    executive: {
-      showRisks: true,
-      includeQoE: true,
-      maskedVersion: false,
-      language: 'fr'
-    },
-    ts_report: {
-      includeAppendices: true,
-      detailedAnalysis: true,
-      maskedVersion: false,
-      confidentialityLevel: 'standard'
-    },
-    excel_master: {
-      protectedFormulas: true,
-      drillDownEnabled: true,
-      includeSourceData: true,
-      readOnlyMode: false
-    }
-  };
-
   const generateDeliverable = (id: string) => {
     alert(`Génération du livrable: ${deliverables.find(d => d.id === id)?.title}\nTraitement en cours...`);
   };

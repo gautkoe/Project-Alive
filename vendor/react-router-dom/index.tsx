@@ -107,10 +107,43 @@ const resolveToUrl = (to: string): URL => {
   return new URL(to, 'http://localhost');
 };
 
-const createHrefWithBasename = (to: string, basename: string): string => {
-  const targetUrl = resolveToUrl(to);
+const hasExplicitProtocol = (to: string): boolean => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(to);
+
+const isExternalUrl = (to: string, targetUrl: URL): boolean => {
+  const protocol = targetUrl.protocol;
+
+  if (protocol && protocol !== 'http:' && protocol !== 'https:') {
+    return true;
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return targetUrl.origin !== window.location.origin;
+  }
+
+  if (to.startsWith('//')) {
+    return true;
+  }
+
+  if (hasExplicitProtocol(to)) {
+    return true;
+  }
+
+  return false;
+};
+
+const buildHrefFromUrl = (targetUrl: URL, basename: string): string => {
   const pathname = applyBasename(targetUrl.pathname, basename);
   return `${pathname}${targetUrl.search}${targetUrl.hash}`;
+};
+
+const createHrefWithBasename = (to: string, basename: string): string => {
+  const targetUrl = resolveToUrl(to);
+
+  if (isExternalUrl(to, targetUrl)) {
+    return to;
+  }
+
+  return buildHrefFromUrl(targetUrl, basename);
 };
 
 const getDefaultBasename = (): string | undefined => {
@@ -243,7 +276,27 @@ export const BrowserRouter: FC<BrowserRouterProps> = ({ children, basename }) =>
         return;
       }
 
-      const href = createHref(to);
+      const targetUrl = resolveToUrl(to);
+
+      if (isExternalUrl(to, targetUrl)) {
+        if (options?.replace) {
+          if (typeof window.location.replace === 'function') {
+            window.location.replace(to);
+          } else if (typeof window.location.assign === 'function') {
+            window.location.assign(to);
+          } else {
+            window.location.href = to;
+          }
+        } else if (typeof window.location.assign === 'function') {
+          window.location.assign(to);
+        } else {
+          window.location.href = to;
+        }
+
+        return;
+      }
+
+      const href = buildHrefFromUrl(targetUrl, resolvedBasename);
 
       if (options?.replace) {
         window.history.replaceState(null, '', href);
@@ -253,7 +306,7 @@ export const BrowserRouter: FC<BrowserRouterProps> = ({ children, basename }) =>
 
       setLocation(getLocation());
     },
-    [createHref, getLocation]
+    [getLocation, resolvedBasename]
   );
 
   const contextValue = useMemo(

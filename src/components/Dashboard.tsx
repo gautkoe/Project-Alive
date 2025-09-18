@@ -80,14 +80,14 @@ export const Dashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tableau de Bord</h1>
-          <p className="text-gray-600">Synthèse de la due diligence - Société ACME SAS</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Tableau de Bord</h1>
+          <p className="text-gray-600 dark:text-slate-300">Synthèse de la due diligence - Société ACME SAS</p>
         </div>
         <div className="flex space-x-3">
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Générer Rapport TS
           </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
             Export Excel
           </button>
         </div>
@@ -130,8 +130,8 @@ export const Dashboard: React.FC = () => {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Alerts */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center dark:text-slate-100">
               <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
               Alertes & Risques
             </h3>
@@ -143,8 +143,8 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Recent Activities */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center dark:text-slate-100">
               <Calendar className="h-5 w-5 text-blue-500 mr-2" />
               Activité Récente
             </h3>
@@ -157,8 +157,8 @@ export const Dashboard: React.FC = () => {
                     <FileText className="h-4 w-4 text-yellow-500" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{activity.date}</p>
+                    <p className="text-sm text-gray-900 dark:text-slate-200">{activity.action}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">{activity.date}</p>
                   </div>
                 </div>
               ))}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ViewType } from '../App';
+import type { ViewType } from '../App';
 import { 
   LayoutDashboard, 
   Upload, 

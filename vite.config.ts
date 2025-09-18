@@ -2,9 +2,11 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const base = process.env.GITHUB_PAGES === 'true' ? '/Project-Alive/' : '/';
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/Project-Alive/',
+  base,
   plugins: [react()],
   resolve: {
     alias: {

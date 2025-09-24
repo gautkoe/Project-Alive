@@ -1,8 +1,22 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Eye, Download, Filter, TrendingDown, Users, DollarSign } from 'lucide-react';
+import { useAppContext } from '../context/useAppContext';
+import { exportRiskReportPdf } from '../services/export';
+
+interface ExportStatus {
+  inProgress: boolean;
+  progress: number;
+  error: string | null;
+}
 
 export const RiskAnalysis: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const { appState } = useAppContext();
+  const [exportStatus, setExportStatus] = useState<ExportStatus>({
+    inProgress: false,
+    progress: 0,
+    error: null,
+  });
 
   const risks = [
     {
@@ -116,6 +130,30 @@ export const RiskAnalysis: React.FC = () => {
     alert(`Drill-down risque #${riskId} - Comptes: ${accounts}\nExport FEC filtré disponible`);
   };
 
+  const handleExport = async () => {
+    setExportStatus({ inProgress: true, progress: 0, error: null });
+
+    try {
+      await exportRiskReportPdf({
+        metadata: {
+          companyName: appState.companyName,
+          analysisDate: appState.analysisDate,
+          period: appState.currentPeriod,
+          currency: appState.currency,
+        },
+        risks,
+        onProgress: progress => setExportStatus(prev => ({ ...prev, progress })),
+      });
+      setExportStatus(prev => ({ ...prev, inProgress: false }));
+    } catch (error) {
+      setExportStatus({
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Export du rapport risques impossible.',
+      });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -124,10 +162,26 @@ export const RiskAnalysis: React.FC = () => {
           <p className="text-gray-600">Détection automatique d'anomalies et points d'attention</p>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Rapport Risques</span>
-          </button>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={handleExport}
+              disabled={exportStatus.inProgress}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                exportStatus.inProgress
+                  ? 'bg-red-400 text-white cursor-wait'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              <Download className="h-4 w-4" />
+              <span>{exportStatus.inProgress ? 'Export en cours...' : 'Rapport Risques'}</span>
+            </button>
+            {exportStatus.inProgress && (
+              <span className="text-xs text-red-600">Progression {exportStatus.progress}%</span>
+            )}
+            {exportStatus.error && (
+              <span className="text-xs text-red-600">{exportStatus.error}</span>
+            )}
+          </div>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
             <Filter className="h-4 w-4" />
             <span>Seuils</span>

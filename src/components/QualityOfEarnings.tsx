@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { TrendingUp, CheckCircle, X, Eye, Download } from 'lucide-react';
+import { useAppContext } from '../context/useAppContext';
+import { exportQualityOfEarningsExcel } from '../services/export';
+
+interface ExportStatus {
+  inProgress: boolean;
+  progress: number;
+  error: string | null;
+}
 
 export const QualityOfEarnings: React.FC = () => {
   const [adjustments, setAdjustments] = useState([
@@ -70,6 +78,12 @@ export const QualityOfEarnings: React.FC = () => {
       impact: 'Ajouter'
     }
   ]);
+  const { appState } = useAppContext();
+  const [exportStatus, setExportStatus] = useState<ExportStatus>({
+    inProgress: false,
+    progress: 0,
+    error: null,
+  });
 
   const handleAdjustment = (id: number, action: 'accept' | 'reject' | 'modify') => {
     setAdjustments(prev => prev.map(adj => 
@@ -108,6 +122,35 @@ export const QualityOfEarnings: React.FC = () => {
     alert(`Drill-down ajustement #${id}\nCompte: ${account}\nExport FEC disponible`);
   };
 
+  const handleExport = async () => {
+    setExportStatus({ inProgress: true, progress: 0, error: null });
+
+    try {
+      await exportQualityOfEarningsExcel({
+        metadata: {
+          companyName: appState.companyName,
+          analysisDate: appState.analysisDate,
+          period: appState.currentPeriod,
+          currency: appState.currency,
+        },
+        adjustments,
+        totals: {
+          baseEbitda: 2230,
+          totalAdjustments: getTotalAdjustments(),
+          normalizedEbitda: getEbitdaNormalized(),
+        },
+        onProgress: progress => setExportStatus(prev => ({ ...prev, progress })),
+      });
+      setExportStatus(prev => ({ ...prev, inProgress: false }));
+    } catch (error) {
+      setExportStatus({
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Export QoE impossible.',
+      });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -116,10 +159,26 @@ export const QualityOfEarnings: React.FC = () => {
           <p className="text-gray-600">Normalisation assistée de l'EBITDA</p>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Export QoE</span>
-          </button>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={handleExport}
+              disabled={exportStatus.inProgress}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                exportStatus.inProgress
+                  ? 'bg-green-400 text-white cursor-wait'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              <Download className="h-4 w-4" />
+              <span>{exportStatus.inProgress ? 'Export en cours...' : 'Export QoE'}</span>
+            </button>
+            {exportStatus.inProgress && (
+              <span className="text-xs text-green-600">Progression {exportStatus.progress}%</span>
+            )}
+            {exportStatus.error && (
+              <span className="text-xs text-red-600">{exportStatus.error}</span>
+            )}
+          </div>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
             Recalculer
           </button>

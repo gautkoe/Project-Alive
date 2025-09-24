@@ -1,8 +1,35 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Download, FileText, Table, Eye, Send, Calendar } from 'lucide-react';
+import { useAppContext } from '../context/useAppContext';
+import {
+  downloadAllDeliverables,
+  generateDeliverableFile,
+  generateShareLink,
+  getDeliverablePreviewMessage,
+} from '../services/export';
+
+interface ExportStatus {
+  inProgress: boolean;
+  progress: number;
+  error: string | null;
+}
+
+const createExportStatus = (): ExportStatus => ({
+  inProgress: false,
+  progress: 0,
+  error: null,
+});
 
 export const Deliverables: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('executive');
+  const { appState } = useAppContext();
+  const [bundleStatus, setBundleStatus] = useState<ExportStatus>(createExportStatus());
+  const [shareState, setShareState] = useState<{ inProgress: boolean; error: string | null; link: string | null }>({
+    inProgress: false,
+    error: null,
+    link: null,
+  });
+  const [deliverableStatus, setDeliverableStatus] = useState<Record<string, ExportStatus>>({});
 
   const deliverables = [
     {
@@ -71,37 +98,130 @@ export const Deliverables: React.FC = () => {
     { id: 'fec_export', name: 'Annexes FEC' }
   ];
 
-  const customizationOptions = {
-    executive: {
-      showRisks: true,
-      includeQoE: true,
-      maskedVersion: false,
-      language: 'fr'
-    },
-    ts_report: {
-      includeAppendices: true,
-      detailedAnalysis: true,
-      maskedVersion: false,
-      confidentialityLevel: 'standard'
-    },
-    excel_master: {
-      protectedFormulas: true,
-      drillDownEnabled: true,
-      includeSourceData: true,
-      readOnlyMode: false
+  const metadata = useMemo(() => ({
+    companyName: appState.companyName,
+    analysisDate: appState.analysisDate,
+    period: appState.currentPeriod,
+    currency: appState.currency,
+  }), [appState.companyName, appState.analysisDate, appState.currentPeriod, appState.currency]);
+
+  const updateDeliverableStatus = (id: string, updates: Partial<ExportStatus>) => {
+    setDeliverableStatus(prev => ({
+      ...prev,
+      [id]: { ...(prev[id] ?? createExportStatus()), ...updates },
+    }));
+  };
+
+  const handleGenerateDeliverable = async (id: string) => {
+    const deliverable = deliverables.find(d => d.id === id);
+    if (!deliverable) {
+      return;
+    }
+
+    updateDeliverableStatus(id, { inProgress: true, progress: 0, error: null });
+
+    try {
+      await generateDeliverableFile({
+        metadata,
+        deliverable: {
+          id: deliverable.id,
+          title: deliverable.title,
+          type: deliverable.type,
+          sections: deliverable.sections,
+        },
+        onProgress: progress => updateDeliverableStatus(id, { progress }),
+      });
+      updateDeliverableStatus(id, { inProgress: false });
+    } catch (error) {
+      updateDeliverableStatus(id, {
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Génération du livrable impossible.',
+      });
     }
   };
 
-  const generateDeliverable = (id: string) => {
-    alert(`Génération du livrable: ${deliverables.find(d => d.id === id)?.title}\nTraitement en cours...`);
+  const previewDeliverable = async (id: string) => {
+    const deliverable = deliverables.find(d => d.id === id);
+    if (!deliverable) {
+      return;
+    }
+
+    try {
+      const message = getDeliverablePreviewMessage({
+        metadata,
+        deliverable: {
+          id: deliverable.id,
+          title: deliverable.title,
+          type: deliverable.type,
+          sections: deliverable.sections,
+        },
+      });
+      alert(`${message}\nPrévisualisation disponible dans l'environnement client.`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Prévisualisation impossible.');
+    }
   };
 
-  const previewDeliverable = (id: string) => {
-    alert(`Aperçu du livrable: ${deliverables.find(d => d.id === id)?.title}\nOuverture du preview...`);
+  const shareDeliverable = async (id: string) => {
+    updateDeliverableStatus(id, { inProgress: true, progress: 0, error: null });
+
+    try {
+      const link = await generateShareLink({ metadata });
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      }
+      updateDeliverableStatus(id, { inProgress: false, progress: 100 });
+      alert(`Lien de partage généré: ${link}`);
+    } catch (error) {
+      updateDeliverableStatus(id, {
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Partage impossible.',
+      });
+    }
   };
 
-  const shareDeliverable = (id: string) => {
-    alert(`Partage du livrable: ${deliverables.find(d => d.id === id)?.title}\nLien de téléchargement généré.`);
+  const handleBundleDownload = async () => {
+    setBundleStatus({ inProgress: true, progress: 0, error: null });
+
+    try {
+      await downloadAllDeliverables({
+        metadata,
+        deliverables: deliverables.map(item => ({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          sections: item.sections,
+        })),
+        onProgress: progress => setBundleStatus(prev => ({ ...prev, progress })),
+      });
+      setBundleStatus(prev => ({ ...prev, inProgress: false }));
+    } catch (error) {
+      setBundleStatus({
+        inProgress: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Téléchargement impossible.',
+      });
+    }
+  };
+
+  const handleShareAll = async () => {
+    setShareState({ inProgress: true, error: null, link: null });
+
+    try {
+      const link = await generateShareLink({ metadata });
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      }
+      setShareState({ inProgress: false, error: null, link });
+    } catch (error) {
+      setShareState({
+        inProgress: false,
+        error: error instanceof Error ? error.message : 'Partage impossible.',
+        link: null,
+      });
+    }
   };
 
   return (
@@ -112,14 +232,46 @@ export const Deliverables: React.FC = () => {
           <p className="text-gray-600">Génération automatique de rapports professionnels</p>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Tout Télécharger</span>
-          </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
-            <Send className="h-4 w-4" />
-            <span>Partager</span>
-          </button>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={handleBundleDownload}
+              disabled={bundleStatus.inProgress}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                bundleStatus.inProgress
+                  ? 'bg-blue-400 text-white cursor-wait'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              <Download className="h-4 w-4" />
+              <span>{bundleStatus.inProgress ? 'Téléchargement...' : 'Tout Télécharger'}</span>
+            </button>
+            {bundleStatus.inProgress && (
+              <span className="text-xs text-blue-600">Progression {bundleStatus.progress}%</span>
+            )}
+            {bundleStatus.error && (
+              <span className="text-xs text-red-600">{bundleStatus.error}</span>
+            )}
+          </div>
+          <div className="flex flex-col items-end space-y-1">
+            <button
+              onClick={handleShareAll}
+              disabled={shareState.inProgress}
+              className={`px-4 py-2 border rounded-lg transition-colors flex items-center space-x-2 ${
+                shareState.inProgress
+                  ? 'border-blue-300 bg-blue-50 text-blue-600 cursor-wait'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Send className="h-4 w-4" />
+              <span>{shareState.inProgress ? 'Partage...' : 'Partager'}</span>
+            </button>
+            {shareState.link && !shareState.inProgress && (
+              <span className="text-xs text-green-600">Lien copié dans le presse-papiers</span>
+            )}
+            {shareState.error && (
+              <span className="text-xs text-red-600">{shareState.error}</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -164,21 +316,32 @@ export const Deliverables: React.FC = () => {
                   {deliverables.find(d => d.id === selectedTemplate)?.title}
                 </h3>
                 <div className="flex space-x-2">
-                  <button 
-                    onClick={() => previewDeliverable(selectedTemplate)}
+                  <button
+                    onClick={() => { void previewDeliverable(selectedTemplate); }}
                     className="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors flex items-center space-x-1"
                   >
                     <Eye className="h-3 w-3" />
                     <span>Aperçu</span>
                   </button>
-                  <button 
-                    onClick={() => generateDeliverable(selectedTemplate)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                  <button
+                    onClick={() => handleGenerateDeliverable(selectedTemplate)}
+                    disabled={deliverableStatus[selectedTemplate]?.inProgress}
+                    className={`px-3 py-1 rounded transition-colors flex items-center space-x-1 ${
+                      deliverableStatus[selectedTemplate]?.inProgress
+                        ? 'bg-blue-400 text-white cursor-wait'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
                     <Download className="h-3 w-3" />
-                    <span>Générer</span>
+                    <span>{deliverableStatus[selectedTemplate]?.inProgress ? 'Génération...' : 'Générer'}</span>
                   </button>
                 </div>
+                {deliverableStatus[selectedTemplate]?.inProgress && (
+                  <span className="text-xs text-blue-600">Progression {deliverableStatus[selectedTemplate]?.progress ?? 0}%</span>
+                )}
+                {deliverableStatus[selectedTemplate]?.error && (
+                  <span className="text-xs text-red-600">{deliverableStatus[selectedTemplate]?.error}</span>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -380,12 +543,17 @@ export const Deliverables: React.FC = () => {
               <h4 className="font-medium text-gray-900 mb-4">Actions Rapides</h4>
               
               <div className="space-y-2">
-                <button 
+                <button
                   onClick={() => shareDeliverable(selectedTemplate)}
-                  className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  disabled={deliverableStatus[selectedTemplate]?.inProgress}
+                  className={`w-full px-3 py-2 text-sm rounded transition-colors flex items-center justify-center space-x-2 ${
+                    deliverableStatus[selectedTemplate]?.inProgress
+                      ? 'bg-blue-400 text-white cursor-wait'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
                 >
                   <Send className="h-3 w-3" />
-                  <span>Partager par email</span>
+                  <span>{deliverableStatus[selectedTemplate]?.inProgress ? 'Traitement...' : 'Partager par email'}</span>
                 </button>
                 <button className="w-full px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors">
                   Programmer génération

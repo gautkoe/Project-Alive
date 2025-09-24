@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, ReactNode } from 'react';
 
-interface AppState {
+export interface AppState {
   companyName: string;
   analysisDate: string;
   currentPeriod: string;
@@ -8,7 +8,7 @@ interface AppState {
   currency: string;
 }
 
-interface AppContextType {
+export interface AppContextType {
   appState: AppState;
   updateAppState: (updates: Partial<AppState>) => void;
 }
@@ -21,7 +21,7 @@ const defaultState: AppState = {
   currency: 'EUR'
 };
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [appState, setAppState] = useState<AppState>(defaultState);
@@ -35,12 +35,4 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       {children}
     </AppContext.Provider>
   );
-};
-
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
 };

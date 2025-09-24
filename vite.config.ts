@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     // Use a relative base path for the static build so GitHub Pages can serve
     // the bundle correctly regardless of the repository name or nesting.
-    base: isProduction ? './' : '/',
+    base: isProduction ? './Project-Alive' : '/Project-Alive',
     plugins: [react()],
     optimizeDeps: {
       exclude: ['lucide-react'],
